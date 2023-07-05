@@ -32,10 +32,16 @@ public class MainRestController
     OrderRepository orderRepository;
 
     @Autowired
+    OrderstatusRepository orderstatusRepository;
+
+    @Autowired
     UserService userService;
 
     @Autowired
     ProductOfferService productOfferService;
+
+    @Autowired
+    ComposeOrderService composeOrderService;
 
     @GetMapping("/")
     public ResponseEntity<String> greet()
@@ -151,6 +157,27 @@ public class MainRestController
     {
         orderRepository.save(order);
         return new ResponseEntity<>("New Order Saved", HttpStatus.OK);
+    }
+
+    @GetMapping("get/order/sellerwise/{sellername}")
+    public List<ComposedOrder> getOrdersSellerwise(@PathVariable String sellername)
+    {
+          List<Order> orderList = orderRepository.findAll();
+          return orderList.stream().filter(order -> productOfferService.
+                  getOffer(order.getOfferid()).getOfferDetail().
+                  getSellername().equals(sellername)).
+                  map(order -> {
+
+                      return composeOrderService.composeOrder(order.getOfferid(), order.getBuyername(), order);
+
+                  } ).collect(Collectors.toList());
+    }
+
+    @PostMapping("save/order/status")
+    public ResponseEntity<String> setOrderStatus(@RequestBody Orderstatus orderstatus)
+    {
+        orderstatusRepository.save(orderstatus);
+        return new ResponseEntity<>("Order Status Updated", HttpStatus.OK);
     }
 
 
